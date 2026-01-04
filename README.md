@@ -42,6 +42,24 @@ Response + Citations
 - **Agent Orchestration**: LangChain-based agent for reasoning and synthesis
 - **User Interface**: Streamlit web app for demos
 
+## 🎯 Key Features
+
+### Current Capabilities
+- [ ] Multi-document ingestion (PDF, DOCX)
+- [ ] Intelligent text chunking with overlap
+- [ ] Local vector similarity search
+- [ ] Source citation and metadata tracking
+- [ ] Natural language querying
+- [ ] Zero external API costs (when using local LLM)
+
+### Planned Enhancements
+- [ ] Multi-agent system (retrieval agent + reasoning agent + compliance checker)
+- [ ] Conversational memory for follow-up questions
+- [ ] Advanced filtering by document type, date, or category
+- [ ] Evaluation metrics (RAGAS framework)
+- [ ] Export responses to PDF reports
+- [ ] User authentication and query logging
+
 ## 🛠️ Tech Stack
 
 ### Core Technologies
@@ -212,24 +230,6 @@ Run specific test file:
 ```bash
 pytest tests/test_document_processor.py -v
 ```
-
-## 🎯 Key Features
-
-### Current Capabilities
-- ✅ Multi-document ingestion (PDF, DOCX)
-- ✅ Intelligent text chunking with overlap
-- ✅ Local vector similarity search
-- ✅ Source citation and metadata tracking
-- ✅ Natural language querying
-- ✅ Zero external API costs (when using local LLM)
-
-### Planned Enhancements
-- 🔄 Multi-agent system (retrieval agent + reasoning agent + compliance checker)
-- 🔄 Conversational memory for follow-up questions
-- 🔄 Advanced filtering by document type, date, or category
-- 🔄 Evaluation metrics (RAGAS framework)
-- 🔄 Export responses to PDF reports
-- 🔄 User authentication and query logging
 
 ## 📈 Performance Considerations
 
