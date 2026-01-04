@@ -4,17 +4,16 @@ An agentic AI system that uses Retrieval-Augmented Generation (RAG) to help user
 
 ## Project Overview
 
-Compliance teams in regulated industries spend countless hours manually searching through SOPs, FDA guidance documents, OSHA standards, and EPA regulations to answer questions about procedures, safety requirements, and compliance obligations. This project demonstrates how agentic AI can automate this knowledge retrieval process.
+Compliance teams in regulated industries spend countless hours manually searching through FDA guidance documents to answer questions about procedures, safety requirements, and compliance obligations. This project demonstrates how agentic AI can automate this knowledge retrieval process.
 
 ### Problem Statement
 - Manufacturing, pharmaceutical, and supply chain companies maintain hundreds of compliance documents
 - Finding relevant information requires manual search across multiple PDFs and document types
-- Knowledge is siloed - related information spans multiple documents
 - Time-consuming for employees to get accurate answers to compliance questions
 
 ### Solution
 An intelligent RAG-based system that:
-- Ingests and processes regulatory documents (FDA, OSHA, EPA) and internal SOPs
+- Ingests and processes regulatory documents (e.g, FDA)
 - Uses vector similarity search to find relevant information
 - Synthesizes answers from multiple documents
 - Provides source citations for transparency and auditability
@@ -45,11 +44,11 @@ Response + Citations
 ## Key Features
 
 ### Current Capabilities
-- [ ] Multi-document ingestion (PDF, DOCX)
-- [ ] Intelligent text chunking with overlap
-- [ ] Local vector similarity search
+- [x] PDF document ingestion
+- [x] Intelligent text chunking with overlap
+- [x] Local vector similarity search
 - [ ] Source citation and metadata tracking
-- [ ] Natural language querying
+- [x] Natural language querying
 - [ ] Zero external API costs (when using local LLM)
 
 ### Planned Enhancements
@@ -69,7 +68,7 @@ Response + Citations
 - **Sentence Transformers** - Free, local embedding generation
 - **Streamlit** - Web interface
 
-### LLM Options (All Free!)
+### LLM Options
 - **Ollama** - Run Llama 3.1/3.3 locally (recommended)
 - **Google Gemini API** - 1500 free requests/day
 
@@ -228,9 +227,6 @@ pytest tests/test_document_processor.py -v
 - Use Groq API for 10x faster inference vs. local
 
 ## License
-
 MIT License
-
----
 
 
