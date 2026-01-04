@@ -12,7 +12,7 @@ openpyxl==3.1.5
 # Utilities
 python-dotenv==1.2.1
 pandas==2.3.3
-numpy==3.6.1
+numpy==2.4.0
 
 # Optional but useful
 tqdm==4.67.1
