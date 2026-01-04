@@ -1,0 +1,18 @@
+# Core dependencies
+langchain
+chromadb
+sentence-transformers
+streamlit
+
+# Document processing
+pypdf
+python-docx
+openpyxl
+
+# Utilities
+python-dotenv
+pandas
+numpy
+
+# Optional but useful
+tqdm
