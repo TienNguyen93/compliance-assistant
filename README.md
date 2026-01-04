@@ -2,7 +2,7 @@
 
 An agentic AI system that uses Retrieval-Augmented Generation (RAG) to help users query and understand regulatory compliance documents across manufacturing, pharmaceutical, and supply chain industries.
 
-## 🎯 Project Overview
+## Project Overview
 
 Compliance teams in regulated industries spend countless hours manually searching through SOPs, FDA guidance documents, OSHA standards, and EPA regulations to answer questions about procedures, safety requirements, and compliance obligations. This project demonstrates how agentic AI can automate this knowledge retrieval process.
 
@@ -19,7 +19,7 @@ An intelligent RAG-based system that:
 - Synthesizes answers from multiple documents
 - Provides source citations for transparency and auditability
 
-## 🏗️ Architecture
+## Architecture
 ```
 User Query
     ↓
@@ -42,7 +42,7 @@ Response + Citations
 - **Agent Orchestration**: LangChain-based agent for reasoning and synthesis
 - **User Interface**: Streamlit web app for demos
 
-## 🎯 Key Features
+## Key Features
 
 ### Current Capabilities
 - [ ] Multi-document ingestion (PDF, DOCX)
@@ -60,7 +60,7 @@ Response + Citations
 - [ ] Export responses to PDF reports
 - [ ] User authentication and query logging
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Core Technologies
 - **Python 3.9+**
@@ -72,56 +72,39 @@ Response + Citations
 ### LLM Options (All Free!)
 - **Ollama** - Run Llama 3.1/3.3 locally (recommended)
 - **Google Gemini API** - 1500 free requests/day
-- **Groq API** - Fast inference with free tier
 
 ### Document Processing
 - **PyPDF2** - PDF text extraction
 - **python-docx** - DOCX processing
 - **RecursiveCharacterTextSplitter** - Intelligent text chunking
 
-## 📦 Installation
-
-### Prerequisites
-- Python 3.9 or higher
-- 4GB+ RAM (8GB recommended for local LLM)
-- Git
+## Installation
 
 ### Setup Steps
-
-1. **Clone the repository**
 ```bash
-git clone <your-repo-url>
-cd compliance-assistant
-```
-
-2. **Create virtual environment**
-```bash
-python -m venv venv
-
-# Activate on Mac/Linux:
-source venv/bin/activate
-
-# Activate on Windows:
-venv\Scripts\activate
-```
-
-3. **Install dependencies**
-```bash
+# 1. Setup
+git clone <repo-url> && cd compliance-assistant
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-```
 
-4. **Download sample documents**
-```bash
+# 2. Get data
 python download_samples.py
+
+# 3. Process documents
+python src/document_processor.py
+
+# 4. Build vector store
+python src/vectorstore_manager.py
+
+# 5. Run app
+streamlit run app.py
 ```
 
-5. **Configure environment (optional)**
-```bash
-cp .env.example .env
-# Edit .env if using external APIs like Gemini
-```
+**First query to try:** *"What are the cleaning validation requirements for pharmaceutical manufacturing equipment?"*
 
-## 📁 Project Structure
+---
+
+## Project Structure
 ```
 compliance-assistant/
 │
@@ -152,7 +135,7 @@ compliance-assistant/
 └── README.md
 ```
 
-## 🚀 Usage
+## Usage
 
 ### 1. Process Documents
 Ingest and chunk your compliance documents:
@@ -187,7 +170,7 @@ Try these sample queries:
 - *"Explain the lockout/tagout procedure for machinery maintenance"*
 - *"What are the storage requirements for sterile drug products?"*
 
-## 🔧 Configuration
+## Configuration
 
 Edit `config.py` to customize:
 ```python
@@ -202,7 +185,7 @@ EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 TOP_K_RESULTS = 5          # Number of chunks to retrieve
 ```
 
-## 📊 Data Sources
+## Data Sources
 
 This project uses publicly available regulatory documents:
 
@@ -219,7 +202,7 @@ This project uses publicly available regulatory documents:
 
 **Supported formats:** PDF, DOCX
 
-## 🧪 Testing
+## Testing
 
 Run unit tests:
 ```bash
@@ -231,7 +214,7 @@ Run specific test file:
 pytest tests/test_document_processor.py -v
 ```
 
-## 📈 Performance Considerations
+## Performance Considerations
 
 ### Current Performance
 - **Document Processing**: ~50-100 pages/second
@@ -244,34 +227,10 @@ pytest tests/test_document_processor.py -v
 - Increase `TOP_K_RESULTS` for more comprehensive answers
 - Use Groq API for 10x faster inference vs. local
 
-## 📝 License
+## License
 
 MIT License
 
 ---
 
-## 🚀 Quick Start Summary
-```bash
-# 1. Setup
-git clone <repo-url> && cd compliance-assistant
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
 
-# 2. Get data
-python download_samples.py
-
-# 3. Process documents
-python src/document_processor.py
-
-# 4. Build vector store
-python src/vectorstore_manager.py
-
-# 5. Run app
-streamlit run app.py
-```
-
-**First query to try:** *"What are the cleaning validation requirements for pharmaceutical manufacturing equipment?"*
-
----
-
-*Built as a portfolio project demonstrating agentic AI, RAG architecture, and practical ML engineering for regulated industries.*
