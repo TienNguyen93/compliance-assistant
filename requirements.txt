@@ -1,18 +1,18 @@
 # Core dependencies
-langchain
-chromadb
-sentence-transformers
-streamlit
+langchain==1.2.0
+chromadb==1.4.0
+sentence-transformers==5.2.0
+streamlit==1.52.2
 
 # Document processing
-pypdf
-python-docx
-openpyxl
+PyPDF2==3.0.1
+python-docx==1.2.0
+openpyxl==3.1.5
 
 # Utilities
-python-dotenv
-pandas
-numpy
+python-dotenv==1.2.1
+pandas==2.3.3
+numpy==3.6.1
 
 # Optional but useful
-tqdm
+tqdm==4.67.1
