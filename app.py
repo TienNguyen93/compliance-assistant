@@ -61,7 +61,14 @@ st.markdown("""
 @st.cache_resource
 def load_retriever():
     """Load retriever once and cache it"""
-    return ComplianceRetriever()
+    try:
+        return ComplianceAgent(model="llama3.1")
+    except Exception as e:
+        st.error(f"Failed to initialize agent: {e}")
+        st.info("Make sure Ollama is installed and running. Run: `ollama pull llama3.1`")
+        st.stop()
+
+    # return ComplianceRetriever()
 
 def format_relevance_score(score):
     """Format relevance score with color coding"""
