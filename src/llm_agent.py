@@ -7,53 +7,180 @@ from pathlib import Path
 project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 
+
+import config
 from src.retriever import ComplianceRetriever
 import ollama  
+from typing import Dict, List
 
 class ComplianceAgent:
-    """Generate answers using retrieved context"""
+    """Generate answers using retrieved context and Ollama"""
     
-    def __init__(self, model="llama3.1"):
-        self.retriever = ComplianceRetriever()
-        self.model = model
-        self.client = ollama.Client()
-    
-    def generate_answer(self, query: str, top_k: int = 5) -> dict:
-        """Generate answer with citations"""
+    def __init__(self, model: str = "llama3.1"):
+        """
+        Initialize the agent
         
-        # Retrieve relevant context
+        Args:
+            model: Ollama model name (default: llama3.1)
+        """
+        self.model = model
+        self.retriever = ComplianceRetriever()
+        
+        # Verify Ollama is available
+        try:
+            ollama.list()
+            print(f"✓ Ollama connected, using model: {model}")
+        except Exception as e:
+            print(f"✗ Ollama error: {e}")
+            print("Make sure Ollama is installed and running!")
+            raise
+    
+    def generate_answer(self, query: str, top_k: int = 5, stream: bool = False) -> Dict:
+        """
+        Generate an answer to the query using retrieved context
+        
+        Args:
+            query: User's question
+            top_k: Number of document chunks to retrieve
+            stream: Whether to stream the response (for UI updates)
+            
+        Returns:
+            Dict with question, answer, sources, and metadata
+        """
+        # Step 1: Retrieve relevant context
+        print(f"🔍 Retrieving top {top_k} relevant documents...")
         results = self.retriever.search(query, top_k=top_k)
         
-        # Format context for LLM
-        context = self.retriever.get_context_for_llm(query, top_k=top_k)
+        # Step 2: Format context for LLM
+        context = self._format_context(results['results'])
         
-        # Create prompt
-        prompt = f"""You are an expert FDA compliance assistant. Answer the question based ONLY on the provided context from FDA guidance documents.
+        # Step 3: Create system prompt
+        system_prompt = """You are an expert FDA compliance assistant specializing in pharmaceutical manufacturing regulations. 
 
-Context from FDA documents:
+Your role is to:
+1. Answer questions accurately based ONLY on the provided FDA guidance documents
+2. Cite specific sources when making claims (use [Source N] notation)
+3. Be clear when information is not available in the provided context
+4. Provide practical, actionable guidance
+5. Use professional but accessible language
+
+If the context doesn't contain enough information to fully answer the question, acknowledge this and explain what information is missing."""
+
+        # Step 4: Create user prompt with context
+        user_prompt = f"""Context from FDA Guidance Documents:
+
 {context}
+
+---
 
 Question: {query}
 
-Instructions:
-- Provide a clear, accurate answer based on the context
-- Cite specific sources when making claims
-- If the context doesn't contain enough information, say so
-- Be concise but thorough
+Please provide a comprehensive answer based on the context above. Remember to:
+- Only use information from the provided sources
+- Cite sources using [Source N] where N is the source number
+- Be specific and detailed
+- If the context is insufficient, clearly state what's missing
 
 Answer:"""
+
+        # Step 5: Generate response
+        print("🤖 Generating answer with Ollama...")
+        
+        if stream:
+            # For streaming responses (useful in UI)
+            response_stream = ollama.chat(
+                model=self.model,
+                messages=[
+                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'user', 'content': user_prompt}
+                ],
+                stream=True
+            )
+            return {
+                'question': query,
+                'answer_stream': response_stream,
+                'sources': results['results'],
+                'num_sources': len(results['results']),
+                'context': context
+            }
+        else:
+            # Regular response
+            response = ollama.chat(
+                model=self.model,
+                messages=[
+                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'user', 'content': user_prompt}
+                ]
+            )
+            
+            return {
+                'question': query,
+                'answer': response['message']['content'],
+                'sources': results['results'],
+                'num_sources': len(results['results']),
+                'context': context,
+                'model': self.model
+            }
+    
+    def _format_context(self, sources: List[Dict]) -> str:
+        """Format retrieved sources into context string"""
+        context_parts = []
+        
+        for i, source in enumerate(sources, 1):
+            filename = source['metadata'].get('filename', 'Unknown')
+            text = source['text']
+            relevance = source['relevance_score']
+            
+            context_parts.append(
+                f"[Source {i}] - {filename} (Relevance: {relevance:.1%})\n{text}"
+            )
+        
+        return "\n\n---\n\n".join(context_parts)
+    
+    def chat(self, query: str, conversation_history: List[Dict] = None, top_k: int = 5) -> Dict:
+        """
+        Conversational interface with memory
+        
+        Args:
+            query: Current question
+            conversation_history: Previous messages (format: [{'role': 'user/assistant', 'content': '...'}])
+            top_k: Number of documents to retrieve
+            
+        Returns:
+            Dict with answer and updated conversation history
+        """
+        # Retrieve context for current query
+        results = self.retriever.search(query, top_k=top_k)
+        context = self._format_context(results['results'])
+        
+        # Build conversation with context
+        messages = [
+            {'role': 'system', 'content': 'You are an expert FDA compliance assistant.'}
+        ]
+        
+        # Add conversation history if exists
+        if conversation_history:
+            messages.extend(conversation_history)
+        
+        # Add current query with context
+        messages.append({
+            'role': 'user',
+            'content': f"Context:\n{context}\n\nQuestion: {query}"
+        })
         
         # Generate response
-        response = self.client.generate(
-            model=self.model,
-            prompt=prompt
-        )
+        response = ollama.chat(model=self.model, messages=messages)
+        
+        # Update history
+        updated_history = conversation_history.copy() if conversation_history else []
+        updated_history.append({'role': 'user', 'content': query})
+        updated_history.append({'role': 'assistant', 'content': response['message']['content']})
         
         return {
             'question': query,
-            'answer': response['response'],
+            'answer': response['message']['content'],
             'sources': results['results'],
-            'num_sources': len(results['results'])
+            'conversation_history': updated_history
         }
 
 

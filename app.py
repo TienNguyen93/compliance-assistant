@@ -7,7 +7,7 @@ project_root = Path(__file__).resolve().parent
 sys.path.insert(0, str(project_root))
 
 import streamlit as st
-from src.retriever import ComplianceRetriever
+from src.llm_agent import ComplianceAgent
 import config
 
 # Page configuration
@@ -59,16 +59,14 @@ st.markdown("""
 
 # Initialize retriever (cached for performance)
 @st.cache_resource
-def load_retriever():
-    """Load retriever once and cache it"""
+def load_agent():
+    """Load agent once and cache it"""
     try:
         return ComplianceAgent(model="llama3.1")
     except Exception as e:
         st.error(f"Failed to initialize agent: {e}")
         st.info("Make sure Ollama is installed and running. Run: `ollama pull llama3.1`")
         st.stop()
-
-    # return ComplianceRetriever()
 
 def format_relevance_score(score):
     """Format relevance score with color coding"""
@@ -88,7 +86,7 @@ def main():
     # Header
     st.markdown('<p class="main-header">📋 FDA Compliance Assistant</p>', unsafe_allow_html=True)
     st.markdown(
-        '<p class="sub-header">Intelligent document retrieval for FDA guidance documents</p>',
+        '<p style="text-align: center; color: #666; font-size: 1.2rem;">Powered by Llama 3.1 & RAG Architecture</p>',
         unsafe_allow_html=True
     )
     
@@ -96,144 +94,174 @@ def main():
     with st.sidebar:
         st.header("⚙️ Settings")
         
-        # Number of results
+        # Model selection
+        model_choice = st.selectbox(
+            "Ollama Model",
+            ["llama3.1"],
+            help="Select the Ollama model to use"
+        )
+        
+        # Number of sources
         top_k = st.slider(
-            "Number of results",
+            "Number of sources",
             min_value=1,
             max_value=10,
             value=5,
-            help="How many document chunks to retrieve"
+            help="How many document chunks to retrieve for context"
         )
         
-        # Show metadata toggle
-        show_metadata = st.checkbox("Show detailed metadata", value=True)
+        # Show sources toggle
+        show_sources = st.checkbox("Show source documents", value=True)
+        show_context = st.checkbox("Show retrieved context", value=False)
         
         st.markdown("---")
         
         # System info
         st.subheader("📊 System Info")
-        
         try:
-            retriever = load_retriever()
-            stats = retriever.get_stats()
+            agent = load_agent()
+            stats = agent.retriever.get_stats()
             
-            st.metric("Total Document Chunks", stats['total_chunks'])
-            st.metric("Embedding Model", "MiniLM-L6-v2", delta="384 dimensions")
+            st.metric("Total Chunks", stats['total_chunks'])
+            st.metric("Model", "Llama 3.1")
+            st.metric("RAG Pipeline", "Active ✅")
             
-            # Categories
-            if stats.get('categories'):
-                st.write("**Document Categories:**")
-                for cat in stats['categories']:
-                    st.write(f"• {cat}")
-        
         except Exception as e:
-            st.error(f"Error loading system info: {e}")
+            st.error(f"Error: {e}")
         
         st.markdown("---")
         
         # Sample queries
         st.subheader("💡 Sample Queries")
         sample_queries = [
-            "What are cleaning validation requirements?",
-            "How should sterile products be manufactured?",
-            "What is process validation?",
-            "What are critical control points in manufacturing?",
+            "What does terminal sterilization usually involve?",
+            "Which guidance is under section 503B of the Federal Food, Drug, and Cosmetic Act?",
+            "What should manufacturers of reusable devices consider?",
         ]
         
         for query in sample_queries:
-            if st.button(query, key=query, use_container_width=True):
+            if st.button(query, key=f"sample_{query}", use_container_width=True):
                 st.session_state.sample_query = query
     
-    # Main content area
-    col1, col2 = st.columns([3, 1])
+    # Main content
+    col1, col2 = st.columns([4, 1])
     
     with col1:
-        # Query input
         default_query = st.session_state.get('sample_query', '')
-        query = st.text_input(
+        query = st.text_area(
             "Ask a question about FDA guidance:",
             value=default_query,
-            placeholder="e.g., What are the requirements for cleaning validation?",
+            height=100,
+            placeholder="e.g., What does terminal sterilization usually involve?",
             key="query_input"
         )
         
-        # Clear sample query after use
         if 'sample_query' in st.session_state:
             del st.session_state.sample_query
     
     with col2:
-        search_button = st.button("🔍 Search", type="primary", use_container_width=True)
+        st.write("")  # Spacing
+        st.write("")  # Spacing
+        search_button = st.button("🤖 Generate Answer", type="primary", use_container_width=True)
     
     # Process query
     if search_button and query:
-        with st.spinner("Searching FDA guidance documents..."):
+        with st.spinner("🔍 Retrieving relevant documents..."):
             try:
-                retriever = load_retriever()
-                results = retriever.search(query, top_k=top_k)
+                agent = load_agent()
                 
-                # Display results count
-                st.success(f"Found {results['num_results']} relevant document chunks")
+                # Progress indicator
+                progress_bar = st.progress(0)
+                status_text = st.empty()
                 
-                # Display results
+                status_text.text("Searching vector database...")
+                progress_bar.progress(33)
+                
+                status_text.text("Generating answer with Llama 3.1...")
+                progress_bar.progress(66)
+                
+                # Generate answer
+                result = agent.generate_answer(query, top_k=top_k)
+                
+                progress_bar.progress(100)
+                status_text.text("✅ Complete!")
+                
+                # Clear progress indicators
+                import time
+                time.sleep(0.5)
+                progress_bar.empty()
+                status_text.empty()
+                
+                # Display answer
                 st.markdown("---")
-                st.subheader("📄 Search Results")
+                st.markdown("### 💡 Answer")
                 
-                for i, result in enumerate(results['results'], 1):
-                    with st.container():
-                        # Result card
-                        st.markdown(f"""
-                        <div class="result-card">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <h3 style="margin: 0;">Result {i}</h3>
-                                <span class="relevance-score">Relevance: {format_relevance_score(result['relevance_score'])}</span>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Source information
-                        col_a, col_b = st.columns([2, 1])
-                        
-                        with col_a:
-                            st.markdown(f"**📁 Source:** {result['metadata']['filename']}")
-                        
-                        with col_b:
-                            st.markdown(f"**📂 Category:** {result['metadata']['category']}")
-                        
-                        # Document text
-                        st.markdown("**Content:**")
-                        st.write(result['text'])
-                        
-                        # Metadata (optional)
-                        if show_metadata:
-                            with st.expander("🔍 View Metadata"):
-                                st.json(result['metadata'])
-                        
-                        st.markdown("---")
+                st.markdown(f'<div class="answer-box">{result["answer"]}</div>', unsafe_allow_html=True)
                 
-                # Export option
-                if st.button("💾 Export Results as JSON"):
-                    import json
-                    json_str = json.dumps(results, indent=2, default=str)
-                    st.download_button(
-                        label="Download JSON",
-                        data=json_str,
-                        file_name=f"search_results_{query[:30]}.json",
-                        mime="application/json"
-                    )
+                # Display sources
+                if show_sources:
+                    st.markdown("---")
+                    st.markdown(f"### 📚 Sources ({result['num_sources']} documents used)")
+                    
+                    for i, source in enumerate(result['sources'], 1):
+                        with st.expander(
+                            f"📄 Source {i}: {source['metadata']['filename']} "
+                            f"(Relevance: {source['relevance_score']:.1%})"
+                        ):
+                            st.markdown(f"**Category:** {source['metadata']['category']}")
+                            st.markdown(f"**Relevance Score:** {source['relevance_score']:.1%}")
+                            st.markdown("**Content:**")
+                            st.write(source['text'])
+                
+                # Show context (debug mode)
+                if show_context:
+                    with st.expander("🔍 View Retrieved Context (Debug)"):
+                        st.text(result['context'])
+                
+                # Export options
+                st.markdown("---")
+                col_a, col_b, col_c = st.columns([1, 1, 2])
+                
+                with col_a:
+                    if st.button("💾 Export as JSON"):
+                        import json
+                        json_str = json.dumps({
+                            'question': result['question'],
+                            'answer': result['answer'],
+                            'sources': [
+                                {
+                                    'filename': s['metadata']['filename'],
+                                    'relevance': s['relevance_score'],
+                                    'text': s['text']
+                                }
+                                for s in result['sources']
+                            ]
+                        }, indent=2)
+                        
+                        st.download_button(
+                            label="Download JSON",
+                            data=json_str,
+                            file_name=f"answer_{query[:30]}.json",
+                            mime="application/json"
+                        )
+                
+                with col_b:
+                    if st.button("📋 Copy Answer"):
+                        st.code(result['answer'], language=None)
             
             except Exception as e:
                 st.error(f"An error occurred: {e}")
                 st.exception(e)
     
     elif search_button and not query:
-        st.warning("Please enter a question to search.")
+        st.warning("⚠️ Please enter a question to get started.")
     
     # Footer
     st.markdown("---")
     st.markdown("""
-    <div style="text-align: center; color: #666; padding: 2rem;">
-        <p><strong>FDA Compliance Assistant</strong> | Built with Streamlit, LangChain, and ChromaDB</p>
-        <p>Powered by sentence-transformers for semantic search</p>
+    <div style="text-align: center; color: #666; padding: 1rem;">
+        <p><strong>FDA Compliance Assistant</strong> | RAG-powered Q&A System</p>
+        <p>Built with Streamlit • LangChain • ChromaDB • Ollama (Llama 3.1)</p>
     </div>
     """, unsafe_allow_html=True)
 
