@@ -4,6 +4,9 @@ chromadb==1.4.0
 sentence-transformers==5.2.0
 streamlit==1.52.2
 
+# add Ollama
+ollama==0.6.1
+
 # Document processing
 PyPDF2==3.0.1
 python-docx==1.2.0
