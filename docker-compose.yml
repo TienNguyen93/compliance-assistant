@@ -3,7 +3,7 @@ version: '3.8'
 services:
   app:
     build: .
-    image: compliance-assistant:latest
+    image: compliance-assistant
     container_name: compliance-assistant
     ports:
       - "8501:8501"
