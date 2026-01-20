@@ -1,15 +1,13 @@
 # Compliance Assistant - Intelligent Document Processing System
 
-An agentic AI system that uses Retrieval-Augmented Generation (RAG) to help users query and understand regulatory compliance documents across manufacturing, pharmaceutical, and supply chain industries.
+An agentic AI system that uses Retrieval-Augmented Generation (RAG) to help users query and understand pharmaceutical regulatory compliance documents.  
 
 ## Project Overview
 
-Compliance teams in regulated industries spend countless hours manually searching through FDA guidance documents to answer questions about procedures, safety requirements, and compliance obligations. This project demonstrates how agentic AI can automate this knowledge retrieval process.
+Compliance teams in regulated industries spend countless hours manually searching through FDA guidance documents to answer questions about procedures, safety requirements, and compliance obligations. This project demonstrates how RAG allows users to query large, unstructured document repositories with natural language in  less time. 
 
 ### Problem Statement
-- Manufacturing, pharmaceutical, and supply chain companies maintain hundreds of compliance documents
-- Finding relevant information requires manual search across multiple PDFs and document types
-- Time-consuming for employees to get accurate answers to compliance questions
+- Finding relevant and accurate information requires manual search across multiple PDFs and document types, which is time-consuming for employees
 
 ### Solution
 An intelligent RAG-based system that:
@@ -49,7 +47,7 @@ Response + Citations
 - [x] Local vector similarity search
 - [ ] Source citation and metadata tracking
 - [x] Natural language querying
-- [ ] Zero external API costs (when using local LLM)
+- [x] Zero external API costs (when using local LLM)
 
 ### Planned Enhancements
 - [ ] Multi-agent system (retrieval agent + reasoning agent + compliance checker)
@@ -61,21 +59,18 @@ Response + Citations
 
 ## Tech Stack
 
-### Core Technologies
-- **Python 3.9+**
-- **LangChain** - Agent orchestration and RAG pipeline
-- **ChromaDB** - Vector database (local, no external dependencies)
-- **Sentence Transformers** - Free, local embedding generation
+### Frontend
 - **Streamlit** - Web interface
 
-### LLM Options
-- **Ollama** - Run Llama 3.1/3.3 locally (recommended)
-- **Google Gemini API** - 1500 free requests/day
-
-### Document Processing
+### Backend
+- **LangChain** - RAG pipeline
+- **ChromaDB** - Local Vector database
+- **Sentence Transformers** - Local embedding generation
+- **RecursiveCharacterTextSplitter** - Intelligent text chunking
+- **Ollama** - Run Llama 3.1/3.3 locally 
 - **PyPDF2** - PDF text extraction
 - **python-docx** - DOCX processing
-- **RecursiveCharacterTextSplitter** - Intelligent text chunking
+
 
 ## Installation
 
@@ -110,9 +105,6 @@ compliance-assistant/
 ├── data/
 │   ├── raw/                       # Original documents
 │   │   ├── fda_guidance/         # FDA regulatory guidance
-│   │   ├── osha_standards/       # OSHA safety standards
-│   │   └── company_sops/         # Sample company SOPs
-│   └── processed/                 # Processed/chunked data
 │
 ├── vectorstore/                   # ChromaDB persistence
 │
@@ -121,7 +113,7 @@ compliance-assistant/
 │   ├── embeddings.py             # Embedding generation
 │   ├── vectorstore_manager.py    # ChromaDB operations
 │   ├── retriever.py              # Retrieval logic
-│   └── agent.py                  # Agent orchestration
+│   └── llm_agent.py              # Llama3.1 via Ollama
 │
 ├── notebooks/                     # Jupyter notebooks for exploration
 │
@@ -185,14 +177,7 @@ TOP_K_RESULTS = 5          # Number of chunks to retrieve
 ```
 
 ## Data Sources
-
-This project uses publicly available regulatory documents:
-
-### Included Sample Documents
-- **FDA Guidance**: Sterile products, process validation, equipment cleaning
-- **OSHA Standards**: Machine guarding, lockout/tagout, hazard communication
-- **EPA Guidelines**: Medical waste, pharmaceutical waste disposal
-- **Sample SOPs**: Mock company standard operating procedures
+- **FDA Guidance**: (https://www.fda.gov/regulatory-information/search-fda-guidance-documents)
 
 ### Adding Your Own Documents
 1. Place PDFs or DOCX files in `data/raw/` (or subdirectories)

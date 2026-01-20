@@ -40,6 +40,7 @@ class DocumentProcessor:
         """Extract text from DOCX"""
         doc = Document(file_path)
         return "\n".join([paragraph.text for paragraph in doc.paragraphs])
+
     
     def load_document(self, file_path: Path) -> str:
         """Load document based on file extension"""
@@ -50,6 +51,7 @@ class DocumentProcessor:
             return self.load_docx(file_path)
         else:
             raise ValueError(f"Unsupported file type: {suffix}")
+            
     
     def chunk_text(self, text: str, metadata: Dict = None) -> List[Dict]:
         """Split text into chunks with metadata"""
