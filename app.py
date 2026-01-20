@@ -83,16 +83,10 @@ def format_relevance_score(score):
     return f'<span style="color: {color}; font-weight: bold;">{score:.1%} ({label})</span>'
 
 def main():
-    # Header
-    st.markdown('<p class="main-header">📋 FDA Compliance Assistant</p>', unsafe_allow_html=True)
-    st.markdown(
-        '<p style="text-align: center; color: #666; font-size: 1.2rem;">Powered by Llama 3.1 & RAG Architecture</p>',
-        unsafe_allow_html=True
-    )
-    
     # Sidebar
     with st.sidebar:
-        st.header("⚙️ Settings")
+        st.header("FDA Compliance Assistant")
+        st.header("Settings")
         
         # Model selection
         model_choice = st.selectbox(
@@ -112,19 +106,15 @@ def main():
         
         # Show sources toggle
         show_sources = st.checkbox("Show source documents", value=True)
-        show_context = st.checkbox("Show retrieved context", value=False)
+        # show_context = st.checkbox("Show retrieved context", value=False)
         
         st.markdown("---")
         
         # System info
-        st.subheader("📊 System Info")
+        st.subheader("System Info")
         try:
             agent = load_agent()
             stats = agent.retriever.get_stats()
-            
-            st.metric("Total Chunks", stats['total_chunks'])
-            st.metric("Model", "Llama 3.1")
-            st.metric("RAG Pipeline", "Active ✅")
             
         except Exception as e:
             st.error(f"Error: {e}")
@@ -132,7 +122,7 @@ def main():
         st.markdown("---")
         
         # Sample queries
-        st.subheader("💡 Sample Queries")
+        st.subheader("Sample Queries")
         sample_queries = [
             "What does terminal sterilization usually involve?",
             "Which guidance is under section 503B of the Federal Food, Drug, and Cosmetic Act?",
@@ -260,7 +250,6 @@ def main():
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; color: #666; padding: 1rem;">
-        <p><strong>FDA Compliance Assistant</strong> | RAG-powered Q&A System</p>
         <p>Built with Streamlit • LangChain • ChromaDB • Ollama (Llama 3.1)</p>
     </div>
     """, unsafe_allow_html=True)
