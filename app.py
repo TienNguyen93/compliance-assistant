@@ -9,6 +9,7 @@ sys.path.insert(0, str(project_root))
 import streamlit as st
 from src.llm_agent import ComplianceAgent
 import config
+import psutil
 
 # Page configuration
 st.set_page_config(
@@ -106,23 +107,79 @@ def main():
         
         # Show sources toggle
         show_sources = st.checkbox("Show source documents", value=True)
-        # show_context = st.checkbox("Show retrieved context", value=False)
+        show_context = st.checkbox("Show retrieved context", value=False)
+
         
         st.markdown("---")
         
-        # System info
-        st.subheader("System Info")
+        # Sources section
+        st.header("Sources")
         try:
-            agent = load_agent()
-            stats = agent.retriever.get_stats()
+            from pathlib import Path
+            fda_guidance_path = Path(__file__).resolve().parent / "data" / "raw" / "fda_guidance"
+            pdf_files = sorted([f for f in fda_guidance_path.glob("*.pdf")])
             
+            if pdf_files:
+                for pdf_path in pdf_files:
+                    display_name = pdf_path.name.replace("-", " ")
+                    with open(pdf_path, "rb") as pdf_file:
+                        st.download_button(
+                            label=f"{display_name}",
+                            data=pdf_file,
+                            file_name=pdf_path.name,
+                            mime="application/pdf",
+                            # use_container_width=True
+                        )
+            else:
+                st.write("No PDFs found in fda_guidance folder")
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"Error loading sources: {e}")
+        
+        st.markdown("---")
+        
+        # TODO: Add real usage stats
+        # Usage statistics
+        st.header("Usage Statistics")
+
+        # CPU usage
+        cpu_usage = psutil.cpu_percent(interval=1)
+
+        # # RAM Usage
+        # memory = psutil.virtual_memory()
+        # ram_available = memory.available / (1024**3)  # Convert to GB
+        # ram_total = memory.total / (1024**3)  # Convert to GB
+        # ram_usage_percent = memory.percent  
+
+        # # GPU Usage (if available)
+        # gpu_usage = "N/A"
+        # gpu_memory_used = "N/A"
+        # gpu_memory_total = "N/A"
+        # try:
+        #     pynvml.nvmlInit()
+        #     device_count = pynvml.nvmlDeviceGetCount()
+        #     if device_count > 0:
+        #         handle = pynvml.nvmlDeviceGetHandleByIndex(0)  # Get first GPU
+        #         utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
+        #         memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        #         gpu_usage = utilization.gpu  # GPU core utilization (%)
+        #         gpu_memory_used = memory_info.used / (1024**3)  # Convert to GB
+        #         gpu_memory_total = memory_info.total / (1024**3)  # Convert to GB
+        #     pynvml.nvmlShutdown()
+        # except (pynvml.NVMLError, ImportError):
+        #     pass  # GPU metrics will remain "N/A" if pynvml is not available or no GPU is detected
+
+        # try:
+        #     agent = load_agent()
+        #     stats = agent.retriever.get_stats()
+            
+        # except Exception as e:
+        #     st.error(f"Error: {e}")
+
         
         st.markdown("---")
         
         # Sample queries
-        st.subheader("Sample Queries")
+        st.header("Sample Queries")
         sample_queries = [
             "What does terminal sterilization usually involve?",
             "Which guidance is under section 503B of the Federal Food, Drug, and Cosmetic Act?",
