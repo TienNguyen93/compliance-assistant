@@ -48,9 +48,9 @@ Response + Citations
 - [ ] Source citation and metadata tracking
 - [x] Natural language querying
 - [x] Zero external API costs (when using local LLM)
+- [x] Containerize with Docker
 
 ### Planned Enhancements
-- [ ] Multi-agent system (retrieval agent + reasoning agent + compliance checker)
 - [ ] Conversational memory for follow-up questions
 - [ ] Advanced filtering by document type, date, or category
 - [ ] Evaluation metrics (RAGAS framework)
@@ -71,6 +71,8 @@ Response + Citations
 - **PyPDF2** - PDF text extraction
 - **python-docx** - DOCX processing
 
+## Data Source
+- **FDA Guidance**: https://www.fda.gov/regulatory-information/search-fda-guidance-documents
 
 ## Installation
 
@@ -94,7 +96,18 @@ python src/vectorstore_manager.py
 streamlit run app.py
 ```
 
-**First query to try:** *"What are the cleaning validation requirements for pharmaceutical manufacturing equipment?"*
+### Docker Deployment
+```bash
+# 1. Clone the repository:
+git clone https://github.com/YOUR_USERNAME/compliance-assistant.git
+cd compliance-assistant
+
+# 2. Start Ollama on your host machine:
+ollama serve 
+
+# 3. Run with Docker Compose:
+docker-compose up
+```
 
 ---
 
@@ -175,43 +188,4 @@ EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 # Retrieval settings
 TOP_K_RESULTS = 5          # Number of chunks to retrieve
 ```
-
-## Data Sources
-- **FDA Guidance**: (https://www.fda.gov/regulatory-information/search-fda-guidance-documents)
-
-### Adding Your Own Documents
-1. Place PDFs or DOCX files in `data/raw/` (or subdirectories)
-2. Run document processor: `python src/document_processor.py`
-3. Rebuild vector store: `python src/vectorstore_manager.py`
-
-**Supported formats:** PDF, DOCX
-
-## Testing
-
-Run unit tests:
-```bash
-pytest tests/
-```
-
-Run specific test file:
-```bash
-pytest tests/test_document_processor.py -v
-```
-
-## Performance Considerations
-
-### Current Performance
-- **Document Processing**: ~50-100 pages/second
-- **Embedding Generation**: ~1000 chunks/minute (local CPU)
-- **Query Latency**: <2 seconds for retrieval + inference
-
-### Optimization Tips
-- Use GPU for faster embedding generation
-- Adjust `CHUNK_SIZE` based on document structure
-- Increase `TOP_K_RESULTS` for more comprehensive answers
-- Use Groq API for 10x faster inference vs. local
-
-## License
-MIT License
-
 
