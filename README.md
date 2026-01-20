@@ -51,6 +51,7 @@ Response + Citations
 - [x] Containerize with Docker
 
 ### Planned Enhancements
+- [ ] Display PDF sources on Streamlit 
 - [ ] Conversational memory for follow-up questions
 - [ ] Advanced filtering by document type, date, or category
 - [ ] Evaluation metrics (RAGAS framework)

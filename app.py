@@ -116,6 +116,7 @@ def main():
         st.header("Sources")
         try:
             from pathlib import Path
+            import base64
             fda_guidance_path = Path(__file__).resolve().parent / "data" / "raw" / "fda_guidance"
             pdf_files = sorted([f for f in fda_guidance_path.glob("*.pdf")])
             
@@ -123,13 +124,8 @@ def main():
                 for pdf_path in pdf_files:
                     display_name = pdf_path.name.replace("-", " ")
                     with open(pdf_path, "rb") as pdf_file:
-                        st.download_button(
-                            label=f"{display_name}",
-                            data=pdf_file,
-                            file_name=pdf_path.name,
-                            mime="application/pdf",
-                            # use_container_width=True
-                        )
+                        pdf_base64 = base64.b64encode(pdf_file.read()).decode('utf-8')
+                        st.markdown(f"<a href='data:application/pdf;base64,{pdf_base64}' target='_blank' style='text-decoration:none'>📄 {display_name}</a>", unsafe_allow_html=True)
             else:
                 st.write("No PDFs found in fda_guidance folder")
         except Exception as e:
