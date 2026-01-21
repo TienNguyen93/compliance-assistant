@@ -83,18 +83,30 @@ def format_relevance_score(score):
     
     return f'<span style="color: {color}; font-weight: bold;">{score:.1%} ({label})</span>'
 
+def initialize_session_state():
+    """Initialize session state for chat history"""
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = []
+
+def add_to_chat_history(question, answer, sources):
+    """Add a Q&A pair to chat history"""
+    st.session_state.chat_history.append({
+        'question': question,
+        'answer': answer,
+        'sources': sources,
+        'num_sources': len(sources)
+    })
+
 def main():
+    # Initialize session state
+    initialize_session_state()
+    
     # Sidebar
     with st.sidebar:
         st.header("FDA Compliance Assistant")
         st.header("Settings")
         
-        # Model selection
-        model_choice = st.selectbox(
-            "Ollama Model",
-            ["llama3.1"],
-            help="Select the Ollama model to use"
-        )
+        st.text("Ollama Model: Llama3.1")
         
         # Number of sources
         top_k = st.slider(
@@ -110,35 +122,33 @@ def main():
         show_context = st.checkbox("Show retrieved context", value=False)
 
         
-        st.markdown("---")
+        # st.markdown("---")
         
-        # Sources section
-        st.header("Sources")
-        try:
-            from pathlib import Path
-            import base64
-            fda_guidance_path = Path(__file__).resolve().parent / "data" / "raw" / "fda_guidance"
-            pdf_files = sorted([f for f in fda_guidance_path.glob("*.pdf")])
+        # # Sources section
+        # st.header("Sources")
+        # try:
+        #     from pathlib import Path
+        #     import base64
+        #     fda_guidance_path = Path(__file__).resolve().parent / "data" / "raw" / "fda_guidance"
+        #     pdf_files = sorted([f for f in fda_guidance_path.glob("*.pdf")])
             
-            if pdf_files:
-                for pdf_path in pdf_files:
-                    display_name = pdf_path.name.replace("-", " ")
-                    with open(pdf_path, "rb") as pdf_file:
-                        pdf_base64 = base64.b64encode(pdf_file.read()).decode('utf-8')
-                        st.markdown(f"<a href='data:application/pdf;base64,{pdf_base64}' target='_blank' style='text-decoration:none'>📄 {display_name}</a>", unsafe_allow_html=True)
-            else:
-                st.write("No PDFs found in fda_guidance folder")
-        except Exception as e:
-            st.error(f"Error loading sources: {e}")
-        
-        st.markdown("---")
+        #     if pdf_files:
+        #         for pdf_path in pdf_files:
+        #             display_name = pdf_path.name.replace("-", " ")
+        #             with open(pdf_path, "rb") as pdf_file:
+        #                 pdf_base64 = base64.b64encode(pdf_file.read()).decode('utf-8')
+        #                 st.markdown(f"<a href='data:application/pdf;base64,{pdf_base64}' target='_blank' style='text-decoration:none'>📄 {display_name}</a>", unsafe_allow_html=True)
+        #     else:
+        #         st.write("No PDFs found in fda_guidance folder")
+        # except Exception as e:
+        #     st.error(f"Error loading sources: {e}")
         
         # TODO: Add real usage stats
         # Usage statistics
-        st.header("Usage Statistics")
+        # st.header("Usage Statistics")
 
-        # CPU usage
-        cpu_usage = psutil.cpu_percent(interval=1)
+        # # CPU usage
+        # cpu_usage = psutil.cpu_percent(interval=1)
 
         # # RAM Usage
         # memory = psutil.virtual_memory()
@@ -172,7 +182,7 @@ def main():
         #     st.error(f"Error: {e}")
 
         
-        st.markdown("---")
+        # st.markdown("---")
         
         # Sample queries
         st.header("Sample Queries")
@@ -185,127 +195,108 @@ def main():
         for query in sample_queries:
             if st.button(query, key=f"sample_{query}", use_container_width=True):
                 st.session_state.sample_query = query
+        
+        st.markdown("---")
+        
+        # Chat History in Sidebar
+        if st.session_state.chat_history:
+            st.header("Chat History")
+            if st.button("Clear History", use_container_width=True):
+                st.session_state.chat_history = []
+                st.session_state.selected_chat = None
+                st.rerun()
+            
+            for i, chat in enumerate(st.session_state.chat_history):
+                if st.button(f"Q: {chat['question'][:50]}...", key=f"chat_{i}", use_container_width=True):
+                    st.session_state.selected_chat = i
+                    st.rerun()
+    
+    # Initialize selected_chat if not present
+    if 'selected_chat' not in st.session_state:
+        st.session_state.selected_chat = None
     
     # Main content
-    col1, col2 = st.columns([4, 1])
-    
-    with col1:
-        default_query = st.session_state.get('sample_query', '')
-        query = st.text_area(
-            "Ask a question about FDA guidance:",
-            value=default_query,
-            height=100,
-            placeholder="e.g., What does terminal sterilization usually involve?",
-            key="query_input"
-        )
+    st.header("Chat")
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # Load selected chat from history if clicked
+    if st.session_state.selected_chat is not None:
+        selected_idx = st.session_state.selected_chat
+        if selected_idx < len(st.session_state.chat_history):
+            selected_chat_data = st.session_state.chat_history[selected_idx]
+            st.markdown(f"### Question: {selected_chat_data['question']}")
+            st.markdown(f"**Answer:**")
+            st.markdown(selected_chat_data['answer'])
+            if selected_chat_data['sources']:
+                st.markdown(f"*Relevant documents: {selected_chat_data['num_sources']}*")
+            st.markdown("---")
+
+    # Display the existing chat messages via `st.chat_message`.
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # Check if a sample query was clicked and automatically submit it
+    if 'sample_query' in st.session_state:
+        sample_query = st.session_state.sample_query
+        del st.session_state.sample_query
         
-        if 'sample_query' in st.session_state:
-            del st.session_state.sample_query
-    
-    with col2:
-        st.write("")  # Spacing
-        st.write("")  # Spacing
-        search_button = st.button("🤖 Generate Answer", type="primary", use_container_width=True)
-    
-    # Process query
-    if search_button and query:
-        with st.spinner("🔍 Retrieving relevant documents..."):
-            try:
-                agent = load_agent()
-                
-                # Progress indicator
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-                
-                status_text.text("Searching vector database...")
-                progress_bar.progress(33)
-                
-                status_text.text("Generating answer with Llama 3.1...")
-                progress_bar.progress(66)
-                
-                # Generate answer
-                result = agent.generate_answer(query, top_k=top_k)
-                
-                progress_bar.progress(100)
-                status_text.text("✅ Complete!")
-                
-                # Clear progress indicators
-                import time
-                time.sleep(0.5)
-                progress_bar.empty()
-                status_text.empty()
-                
-                # Display answer
-                st.markdown("---")
-                st.markdown("### 💡 Answer")
-                
-                st.markdown(f'<div class="answer-box">{result["answer"]}</div>', unsafe_allow_html=True)
-                
-                # Display sources
-                if show_sources:
-                    st.markdown("---")
-                    st.markdown(f"### 📚 Sources ({result['num_sources']} documents used)")
+        # Store and display the sample query
+        st.session_state.messages.append({"role": "user", "content": sample_query})
+        with st.chat_message("user"):
+            st.markdown(sample_query)
+
+        # Generate a response using the ComplianceAgent.
+        with st.chat_message("assistant"):
+            with st.spinner("🔍 Retrieving relevant documents..."):
+                try:
+                    agent = load_agent()
                     
-                    for i, source in enumerate(result['sources'], 1):
-                        with st.expander(
-                            f"📄 Source {i}: {source['metadata']['filename']} "
-                            f"(Relevance: {source['relevance_score']:.1%})"
-                        ):
-                            st.markdown(f"**Category:** {source['metadata']['category']}")
-                            st.markdown(f"**Relevance Score:** {source['relevance_score']:.1%}")
-                            st.markdown("**Content:**")
-                            st.write(source['text'])
-                
-                # Show context (debug mode)
-                if show_context:
-                    with st.expander("🔍 View Retrieved Context (Debug)"):
-                        st.text(result['context'])
-                
-                # Export options
-                st.markdown("---")
-                col_a, col_b, col_c = st.columns([1, 1, 2])
-                
-                with col_a:
-                    if st.button("💾 Export as JSON"):
-                        import json
-                        json_str = json.dumps({
-                            'question': result['question'],
-                            'answer': result['answer'],
-                            'sources': [
-                                {
-                                    'filename': s['metadata']['filename'],
-                                    'relevance': s['relevance_score'],
-                                    'text': s['text']
-                                }
-                                for s in result['sources']
-                            ]
-                        }, indent=2)
-                        
-                        st.download_button(
-                            label="Download JSON",
-                            data=json_str,
-                            file_name=f"answer_{query[:30]}.json",
-                            mime="application/json"
-                        )
-                
-                with col_b:
-                    if st.button("📋 Copy Answer"):
-                        st.code(result['answer'], language=None)
-            
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
-                st.exception(e)
+                    # Generate answer
+                    result = agent.generate_answer(sample_query, top_k=top_k)
+                    
+                    # Display the answer
+                    st.markdown(result["answer"])
+                    
+                    # Add to chat history
+                    add_to_chat_history(sample_query, result["answer"], result['sources'])
+                    
+                    # Store in messages
+                    st.session_state.messages.append({"role": "assistant", "content": result["answer"]})
+                    
+                except Exception as e:
+                    st.error(f"An error occurred: {e}")
     
-    elif search_button and not query:
-        st.warning("⚠️ Please enter a question to get started.")
-    
-    # Footer
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; color: #666; padding: 1rem;">
-        <p>Built with Streamlit • LangChain • ChromaDB • Ollama (Llama 3.1)</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Create a chat input field to allow the user to enter a message. This will display
+    # automatically at the bottom of the page.
+    if prompt := st.chat_input("Start typing..."):
+
+        # Store and display the current prompt.
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        # Generate a response using the ComplianceAgent.
+        with st.chat_message("assistant"):
+            with st.spinner("Retrieving relevant documents..."):
+                try:
+                    agent = load_agent()
+                    
+                    # Generate answer
+                    result = agent.generate_answer(prompt, top_k=top_k)
+                    
+                    # Display the answer
+                    st.markdown(result["answer"])
+                    
+                    # Add to chat history
+                    add_to_chat_history(prompt, result["answer"], result['sources'])
+                    
+                    # Store in messages
+                    st.session_state.messages.append({"role": "assistant", "content": result["answer"]})
+                    
+                except Exception as e:
+                    st.error(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":

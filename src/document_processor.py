@@ -4,8 +4,11 @@ Document processing: load PDFs/DOCX and chunk them for embedding
 import sys
 from pathlib import Path
 from typing import List, Dict
-import PyPDF2
+import pdfplumber
 from docx import Document
+
+# import pdfplumber
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # add project root to Python path
@@ -28,12 +31,13 @@ class DocumentProcessor:
         )
     
     def load_pdf(self, file_path: Path) -> str:
-        """Extract text from PDF"""
+        """Extract text from PDF using pdfplumber"""
         text = ""
-        with open(file_path, 'rb') as file:
-            pdf_reader = PyPDF2.PdfReader(file)
-            for page in pdf_reader.pages:
-                text += page.extract_text()
+        with pdfplumber.open(file_path) as pdf:
+            for page in pdf.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
         return text
     
     def load_docx(self, file_path: Path) -> str:
