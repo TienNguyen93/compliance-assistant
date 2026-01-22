@@ -1,10 +1,10 @@
 # Compliance Assistant - Intelligent Document Processing System
 
-An agentic AI system that uses Retrieval-Augmented Generation (RAG) to help users query and understand pharmaceutical regulatory compliance documents.  
+A RAG web application that helps users query and understand pharmaceutical regulatory compliance documents.  
 
 ## Project Overview
 
-Compliance teams in regulated industries spend countless hours manually searching through FDA guidance documents to answer questions about procedures, safety requirements, and compliance obligations. This project demonstrates how RAG allows users to query large, unstructured document repositories with natural language in  less time. 
+Compliance teams in regulated industries spend countless hours manually searching through FDA guidance documents to answer questions about procedures, safety requirements, and compliance obligations. This project demonstrates how RAG allows users to query large, unstructured document repositories with natural language in less time. 
 
 ### Problem Statement
 - Finding relevant and accurate information requires manual search across multiple PDFs and document types, which is time-consuming for employees
