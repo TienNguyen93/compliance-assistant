@@ -41,22 +41,17 @@ Response + Citations
 
 ## Key Features
 
-### Current Capabilities
+### Capabilities
 - [x] PDF document ingestion
 - [x] Intelligent text chunking with overlap
 - [x] Local vector similarity search
-- [ ] Source citation and metadata tracking
+- [x] Source citation and metadata tracking
 - [x] Natural language querying
 - [x] Zero external API costs (when using local LLM)
 - [x] Containerize with Docker
 
-### Planned Enhancements
-- [ ] Display PDF sources on Streamlit 
-- [ ] Conversational memory for follow-up questions
-- [ ] Advanced filtering by document type, date, or category
-- [ ] Evaluation metrics (RAGAS framework)
-- [ ] Export responses to PDF reports
-- [ ] User authentication and query logging
+## Walkthrough video
+
 
 ## Tech Stack
 
