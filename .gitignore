@@ -20,3 +20,5 @@ data/processed/*
 # IDE
 .vscode/
 .idea/
+
+tests/

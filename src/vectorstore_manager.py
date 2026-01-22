@@ -9,6 +9,11 @@ from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
+
+'''
+TODO: BM25
+'''
+
 # add project root to Python path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
@@ -45,7 +50,10 @@ class VectorStoreManager:
         # Get or create collection
         self.collection = self.client.get_or_create_collection(
             name=collection_name,
-            metadata={"description": "Compliance documents for RAG system"}
+            metadata={
+                "description": "Compliance documents for RAG system",
+                "hnsw:space": "cosine" 
+                }
         )
     
     def generate_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
@@ -211,8 +219,8 @@ def main():
         results['distances'][0]
     ), 1):
         print(f"\n--- Result {i} (distance: {distance:.3f}) ---")
-        print(f"Source: {metadata['filename']}")
-        print(f"Category: {metadata['category']}")
+        # print(f"Source: {metadata['filename']}")
+        # print(f"Category: {metadata['category']}")
         print(f"Text preview: {doc[:200]}...")
     
     print("\n" + "=" * 80)

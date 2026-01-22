@@ -9,7 +9,7 @@ sys.path.insert(0, str(project_root))
 import streamlit as st
 from src.llm_agent import ComplianceAgent
 import config
-import psutil
+# import psutil
 
 # Page configuration
 st.set_page_config(

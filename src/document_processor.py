@@ -4,11 +4,8 @@ Document processing: load PDFs/DOCX and chunk them for embedding
 import sys
 from pathlib import Path
 from typing import List, Dict
-import pdfplumber
+import PyPDF2
 from docx import Document
-
-# import pdfplumber
-from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # add project root to Python path
@@ -27,18 +24,56 @@ class DocumentProcessor:
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
+            add_start_index=True,  
             separators=["\n\n", "\n", ". ", " ", ""]
         )
     
     def load_pdf(self, file_path: Path) -> str:
-        """Extract text from PDF using pdfplumber"""
+        """Extract text from PDF"""
         text = ""
-        with pdfplumber.open(file_path) as pdf:
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
+        with open(file_path, 'rb') as file:
+            pdf_reader = PyPDF2.PdfReader(file)
+            for page in pdf_reader.pages:
+                text += page.extract_text()
         return text
+    
+    def extract_pdf_metadata(self, file_path: Path) -> Dict:
+        """Extract PDF metadata using PyPDF2"""
+        metadata = {}
+        try:
+            with open(file_path, 'rb') as file:
+                pdf_reader = PyPDF2.PdfReader(file)
+                
+                # Basic metadata
+                metadata["page_count"] = len(pdf_reader.pages)
+                
+                # PDF info/metadata
+                if pdf_reader.metadata:
+                    pdf_info = pdf_reader.metadata
+                    metadata["author"] = pdf_info.get("/Author", "Unknown")
+                    metadata["title"] = pdf_info.get("/Title", file_path.stem)
+                    metadata["subject"] = pdf_info.get("/Subject", "")
+                    metadata["keywords"] = pdf_info.get("/Keywords", "")
+                    metadata["creator"] = pdf_info.get("/Creator", "")
+                else:
+                    metadata["author"] = "Unknown"
+                    metadata["title"] = file_path.stem
+                    metadata["subject"] = ""
+                    metadata["keywords"] = ""
+                    metadata["creator"] = ""
+        except Exception as e:
+            print(f"  ⚠ Error extracting PDF metadata: {e}")
+            # Set defaults if extraction fails
+            metadata = {
+                "page_count": 0,
+                "author": "Unknown",
+                "title": file_path.stem,
+                "subject": "",
+                "keywords": "",
+                "creator": "",
+            }
+        
+        return metadata
     
     def load_docx(self, file_path: Path) -> str:
         """Extract text from DOCX"""
@@ -79,14 +114,22 @@ class DocumentProcessor:
                 
                 try:
                     text = self.load_document(file_path)
+                    
+                    # Extract file-level metadata
                     metadata = {
                         "source": str(file_path),
-                        "filename": file_path.name,
-                        "category": file_path.parent.name
+                        "file_size_kb": round(file_path.stat().st_size / 1024, 2),
                     }
+                    
+                    # Add PDF-specific metadata if it's a PDF
+                    if file_path.suffix.lower() == '.pdf':
+                        pdf_metadata = self.extract_pdf_metadata(file_path)
+                        metadata.update(pdf_metadata)
+                    
                     chunks = self.chunk_text(text, metadata)
                     all_chunks.extend(chunks)
                     print(f"  → Created {len(chunks)} chunks")
+                    print(f"  → Metadata: {len(chunks)} pages, author: {metadata.get('author', 'N/A')}")
                     
                 except Exception as e:
                     print(f"  ✗ Error processing {file_path.name}: {e}")
@@ -99,3 +142,4 @@ if __name__ == "__main__":
     processor = DocumentProcessor()
     chunks = processor.process_directory(config.RAW_DATA_DIR)
     print(f"\n✓ Total chunks created: {len(chunks)}")
+    # print(f"Sample chunk:\n{chunks[0]}")
