@@ -50,9 +50,6 @@ Response + Citations
 - [x] Zero external API costs (when using local LLM)
 - [x] Containerize with Docker
 
-## Walkthrough video
-
-
 ## Tech Stack
 
 ### Frontend
@@ -90,19 +87,6 @@ python src/vectorstore_manager.py
 
 # 5. Run app
 streamlit run app.py
-```
-
-### Docker Deployment
-```bash
-# 1. Clone the repository:
-git clone https://github.com/YOUR_USERNAME/compliance-assistant.git
-cd compliance-assistant
-
-# 2. Start Ollama on your host machine:
-ollama serve 
-
-# 3. Run with Docker Compose:
-docker-compose up
 ```
 
 ---
